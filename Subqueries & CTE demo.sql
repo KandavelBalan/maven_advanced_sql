@@ -45,9 +45,152 @@ WHERE hs.country = 'India';
 
 -- Return happiness scores for 2015 - 2024
             SELECT "year", country,happiness_score FROM happiness_scores
+				UNION 
+			SELECT 2024, country, ladder_score FROM happiness_scores_current;
 			
 /* Return a country's happiness score for the year as well as
 the average happiness score for the country across years */
-       
+SELECT
+	HS.YEAR,
+	HS.COUNTRY,
+	HS.HAPPINESS_SCORE,
+	AVG_HS.AVG_HPY_SC,
+	AVG_HS.AVG_HPY_SC - HS.HAPPINESS_SCORE DIFF_SCORE
+FROM
+	(
+		SELECT
+			"year",
+			COUNTRY,
+			HAPPINESS_SCORE
+		FROM
+			HAPPINESS_SCORES
+		UNION
+		SELECT
+			2024,
+			COUNTRY,
+			LADDER_SCORE
+		FROM
+			HAPPINESS_SCORES_CURRENT
+	) HS
+	LEFT JOIN (
+		SELECT
+			HS.COUNTRY,
+			AVG(HS.HAPPINESS_SCORE) AVG_HPY_SC
+		FROM
+			(
+				SELECT
+					"year",
+					COUNTRY,
+					HAPPINESS_SCORE
+				FROM
+					HAPPINESS_SCORES
+				UNION
+				SELECT
+					2024,
+					COUNTRY,
+					LADDER_SCORE
+				FROM
+					HAPPINESS_SCORES_CURRENT
+			) HS
+		GROUP BY
+			HS.COUNTRY
+	) AVG_HS ON HS.COUNTRY = AVG_HS.COUNTRY;
+
 /* Return years where the happiness score is a whole point
 greater than the country's average happiness score */
+SELECT
+	TOTAL_HS.YEAR,
+	TOTAL_HS.COUNTRY,
+	TOTAL_HS.HAPPINESS_SCORE,
+	TOTAL_HS.AVG_HPY_SC
+FROM
+	(
+		SELECT
+			HS.YEAR,
+			HS.COUNTRY,
+			HS.HAPPINESS_SCORE,
+			AVG_HS.AVG_HPY_SC
+		FROM
+			(
+				SELECT
+					"year",
+					COUNTRY,
+					HAPPINESS_SCORE
+				FROM
+					HAPPINESS_SCORES
+				UNION ALL
+				SELECT
+					2024,
+					COUNTRY,
+					LADDER_SCORE
+				FROM
+					HAPPINESS_SCORES_CURRENT
+			) HS
+			LEFT JOIN (
+				SELECT
+					HS.COUNTRY,
+					AVG(HS.HAPPINESS_SCORE) AVG_HPY_SC
+				FROM
+					(
+						SELECT
+							"year",
+							COUNTRY,
+							HAPPINESS_SCORE
+						FROM
+							HAPPINESS_SCORES
+						UNION ALL
+						SELECT
+							2024,
+							COUNTRY,
+							LADDER_SCORE
+						FROM
+							HAPPINESS_SCORES_CURRENT
+					) HS
+				GROUP BY
+					HS.COUNTRY
+			) AVG_HS ON HS.COUNTRY = AVG_HS.COUNTRY
+	) TOTAL_HS
+WHERE
+	TOTAL_HS.HAPPINESS_SCORE > TOTAL_HS.AVG_HPY_SC + 1;
+
+-- WITHOUT 2024 CALC AVERAGE
+SELECT
+	TOTAL_HS.YEAR,
+	TOTAL_HS.COUNTRY,
+	TOTAL_HS.HAPPINESS_SCORE,
+	TOTAL_HS.AVG_HPY_SC
+FROM
+	(
+		SELECT
+			HS.YEAR,
+			HS.COUNTRY,
+			HS.HAPPINESS_SCORE,
+			AVG_HS.AVG_HPY_SC
+		FROM
+			(
+				SELECT
+					"year",
+					COUNTRY,
+					HAPPINESS_SCORE
+				FROM
+					HAPPINESS_SCORES
+				UNION ALL
+				SELECT
+					2024,
+					COUNTRY,
+					LADDER_SCORE
+				FROM
+					HAPPINESS_SCORES_CURRENT
+			) HS
+			LEFT JOIN (
+				SELECT
+					HS.COUNTRY,
+					AVG(HS.HAPPINESS_SCORE) AVG_HPY_SC
+				FROM
+					HAPPINESS_SCORES HS
+				GROUP BY
+					HS.COUNTRY
+			) AVG_HS ON HS.COUNTRY = AVG_HS.COUNTRY
+	) TOTAL_HS
+WHERE
+	TOTAL_HS.HAPPINESS_SCORE > TOTAL_HS.AVG_HPY_SC + 1;
