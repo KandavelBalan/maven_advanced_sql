@@ -55,3 +55,24 @@ SELECT order_id, order_date, to_char((order_date + interval '2 days'),'yyyy-mm-d
 cast((order_date + interval '2 days')as date) FROM orders
 where order_date >= '2024-04-01'
 and   order_date <= '2024-06-30';
+
+-- ASSIGNMENT 3: String functions
+
+-- View the current factory names and product IDs
+
+SELECT factory,product_id
+FROM products;
+
+-- Remove apostrophes and replace spaces with hyphens
+
+SELECT REPLACE(REPLACE(factory,'''',''),' ','-'),product_id
+FROM products;
+
+-- Create new ID column called factory_product_id
+
+WITH new_id_cte AS(	SELECT 	REPLACE(REPLACE(factory,'''',''),' ','-') cleanup_factory,
+							factory,product_id
+					FROM products
+					)
+SELECT CONCAT_WS('-',cleanup_factory,product_id) new_id, CONCAT(cleanup_factory,' - ',product_id) new_id_2
+FROM new_id_cte;

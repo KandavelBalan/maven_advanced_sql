@@ -169,4 +169,113 @@ WITH cleanup_data AS(SELECT REPLACE(event_name,'\','') clean_name,
 SELECT  clean_name, event_type_cleanup, event_desc,
 		CONCAT(event_type_cleanup,' | ', event_desc) combine_desc,
 		CONCAT_WS(' | ',event_type_cleanup,event_desc) ws_concat
-FROM CLEANUP_DATA
+FROM CLEANUP_DATA;
+
+-- Return the first word of each event
+
+SELECT event_name, SUBSTRING(event_name FROM 1 FOR 3)
+FROM my_events;
+
+SELECT  event_name, POSITION(' ' IN event_name),
+		STRPOS(event_name,' ')
+FROM my_events;
+
+SELECT event_name, SUBSTRING(event_name FROM 1 FOR STRPOS(event_name,' ')) Fw
+FROM my_events;
+
+-- Update to handle single word events
+
+SELECT  event_name, 
+		CASE WHEN STRPOS(event_name,' ') > 0 
+			THEN SUBSTRING(event_name FROM 1 FOR STRPOS(event_name,' '))
+		ELSE event_name
+		END Fw
+FROM my_events;
+
+-- Return descriptions that contain 'family'
+
+SELECT event_desc
+FROM my_events
+WHERE  event_desc LIKE '%family%';
+
+-- Return descriptions that start with 'A'
+SELECT	*
+FROM	my_events
+WHERE event_desc like 'A %';
+
+-- Return students with three letter first names
+
+SELECT * 
+FROM students
+WHERE student_name LIKE '____ %';
+
+-- Note any celebration word in the sentence
+
+SELECT event_name, event_type, event_desc,
+	REGEXP_SUBSTR(event_desc,'celebration|festival|holiday')
+FROM my_events
+WHERE event_desc like '%celebration%'
+	OR event_desc like '%festival%'
+	OR event_desc like '%holiday%';
+
+-- Return words with hyphens in them
+
+SELECT	event_desc,
+		REGEXP_SUBSTR(event_desc,'[A-Z][a-z]+(.[A-Za-z]+)+') AS hyphen_phrase
+FROM	my_events;
+
+-- 5. NULL FUNCTIONS
+
+-- Create a contacts table
+
+CREATE TABLE contacts (
+    name VARCHAR(50),
+    email VARCHAR(100),
+    alt_email VARCHAR(100));
+
+INSERT INTO contacts (name, email, alt_email) VALUES
+	('Anna', 'anna@example.com', NULL),
+	('Bob', NULL, 'bob.alt@example.com'),
+	('Charlie', NULL, NULL),
+	('David', 'david@example.com', 'david.alt@example.com');
+
+SELECT * FROM contacts;
+
+-- Return null values
+
+SELECT * 
+FROM contacts 
+WHERE email IS NULL;
+
+-- Return non-null values
+
+SELECT 	*
+FROM 	contacts
+WHERE	alt_email IS NOT NULL;
+
+-- Return non-NULL values using a CASE statement
+
+SELECT 	name, email,
+		CASE WHEN email IS NOT NULL THEN email
+			 ELSE 'no email' END AS contact_email
+FROM 	contacts;
+
+-- Return non-NULL values using IF NULL
+
+SELECT 	name, email,
+		COALESCE(email, 'no email') AS contact_email
+FROM 	contacts;
+
+-- Return an alternative field using IF NULL
+
+SELECT 	name, email, alt_email,
+		COALESCE(email, alt_email) AS contact_email
+FROM 	contacts;
+
+-- Return an alternative field after multiple checks
+
+SELECT 	name, email, alt_email,
+		COALESCE(email, 'no email') AS contact_email_value,
+        COALESCE(email, alt_email) AS contact_email_column,
+        COALESCE(email, alt_email, 'no email') AS contact_email_coalesce
+FROM 	contacts;
