@@ -76,3 +76,63 @@ WITH new_id_cte AS(	SELECT 	REPLACE(REPLACE(factory,'''',''),' ','-') cleanup_fa
 					)
 SELECT CONCAT_WS('-',cleanup_factory,product_id) new_id, CONCAT(cleanup_factory,' - ',product_id) new_id_2
 FROM new_id_cte;
+
+-- ASSIGNMENT 4: Pattern matching
+
+-- View the product names
+	SELECT * 
+	FROM products;
+
+-- Only extract text after the hyphen for Wonka Bars
+
+	SELECT product_name, REPLACE(product_name,'Wonka Bar - ','') cleanup_name
+	FROM products
+	ORDER BY product_name;
+
+
+
+-- Alternative using substrings
+
+	SELECT product_name,CASE when strpos(product_name,'- ') > 0 
+						THEN substring(product_name from strpos(product_name,'- ')+2 for length(product_name))
+						ELSE product_name end cleanup_name
+	FROM products
+	ORDER BY product_name;
+
+	SELECT product_name,CASE when strpos(product_name,'- ') > 0 
+						THEN substring(product_name from strpos(product_name,'- ')+2)
+						ELSE product_name end cleanup_name
+	FROM products
+	ORDER BY product_name;
+
+-- ASSIGNMENT 5: Null functions
+
+-- View the columns of interest
+
+SELECT * 
+FROM products
+ORDER BY product_name;
+
+-- Replace NULL values with Other
+
+	SELECT product_name, factory, division, COALESCE(division,'Other') AS Division
+	FROM products;
+
+-- Find the most common division for each factory
+
+	SELECT MAX(division)
+	FROM products;
+
+	
+-- Replace NULL values with top division for each factory
+
+	SELECT product_name, factory, 
+	division, COALESCE(division,MAX(division) OVER(PARTITION BY factory)) AS Division
+	FROM products;
+
+-- Replace division with Other value and top division
+
+	SELECT product_name, factory, 
+	division, COALESCE(division,MAX(division) OVER()) AS Division,
+	COALESCE(division,MAX(division) OVER(PARTITION BY factory)) AS Division
+	FROM products;
